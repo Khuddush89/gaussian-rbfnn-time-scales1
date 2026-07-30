@@ -1,0 +1,14 @@
+name: verify
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - name: Theory-code consistency (40 checks)
+        run: python code/stress_test.py
+      - name: Regenerate every figure and table
+        run: python code/make_figures.py

@@ -1,0 +1,9 @@
+time scale,condition,largest forbidden $\alpha$
+"$h\mathbb{Z}$, $h=1.0$",$\alpha\neq 1/(kh^2)$,1.0
+"$h\mathbb{Z}$, $h=0.5$",$\alpha\neq 1/(kh^2)$,4.0
+"$h\mathbb{Z}$, $h=0.25$",$\alpha\neq 1/(kh^2)$,16.0
+"$h\mathbb{Z}$, $h=0.1$",$\alpha\neq 1/(kh^2)$,99.99999999999999
+"$2^{\mathbb{N}_0}$, $c=2^{2}$",$\alpha<4/((q-1)c^2)$,0.25
+"$2^{\mathbb{N}_0}$, $c=2^{4}$",$\alpha<4/((q-1)c^2)$,0.015625
+"$2^{\mathbb{N}_0}$, $c=2^{6}$",$\alpha<4/((q-1)c^2)$,0.0009765625
+"harmonic, $n_0=8$",$\alpha<1/W(c)$,576.000000000002

@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+.DS_Store
+
+# ---------------------------------------------------------------------------
+# The manuscript is deliberately NOT tracked: several journals treat a publicly
+# posted paper as prior publication. Only code, data and figures live here.
+# ---------------------------------------------------------------------------
+paper/
+*.pdf
+RBF.tex
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk

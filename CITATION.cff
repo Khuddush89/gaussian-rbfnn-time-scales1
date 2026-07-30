@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+title: Gaussian Radial Basis Function Neural Networks on Time Scales
+message: If you use this software or its results, please cite the paper.
+type: software
+authors:
+  - family-names: Khuddush
+    given-names: Mahammad
+    orcid: https://orcid.org/0000-0002-1236-8334
+  - family-names: Georgiev
+    given-names: Svetlin G.
+    orcid: https://orcid.org/0000-0001-8015-4226
+license: MIT
+version: 1.0.0
+keywords:
+  - time scales
+  - radial basis functions
+  - neural networks
+  - dynamic equations
+  - a-posteriori error estimates
