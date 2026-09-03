@@ -52,63 +52,6 @@ Jacobian, quantum closed form, integer-grid worked example, hybrid identities,
 corrected nonuniform-graininess second-order manufactured equation, and the
 first-order manufactured equation. The final audit gives no failed checks.
 
-## Reviewer-driven changes
-
-### Reviewer 1
-
-- Section 4 now states the transformed width variables, admissible box,
-  separation-scaled initialization, master seed, analytic Jacobian, parameter
-  updates, stopping tolerances and evaluation budgets.
-- The trust-region reflective choice is supported by 20 identical multistart
-  initializations against dogbox, Levenberg-Marquardt and L-BFGS-B. Success in
-  that table means both maximum error below 1e-8 and admissible widths; the final
-  LM median/best errors are 2.78e-15 and 2.22e-16.
-- The five quantum centres and initial widths are justified and tested by a
-  centre-placement ablation.
-- The apparent five-neuron/six-neuron error reversal is explained correctly as
-  a machine-precision conditioning effect. Success improves from 85% to 100%
-  even though the median maximum error changes from 2.11e-15 to 2.56e-14.
-- The Lipschitz functions used in the a-posteriori certificate are derived for
-  each example and the effectivity indices are explained. An equality case for
-  the certificate is proved. The logistic CSV roundoff-level pointwise
-  certificate discrepancy at t=2 and t=4 is documented explicitly.
-
-### Reviewer 2
-
-- A strict classical Gaussian RBFNN control now changes only the activation
-  formula; architecture, centres, widths, initialization, optimiser, seeds and
-  budgets are identical.
-- A second generous-width classical control is included to test sensitivity to
-  the positive-regressivity width restriction. This prevents an unfair
-  superiority claim.
-- The exact delta recurrence is included as the classical numerical baseline,
-  with the manuscript explicitly acknowledging that it is much faster for
-  simple scalar first-order right-scattered IVPs.
-- A realistically motivated irregular logistic population model and joint
-  parameter-identification experiment are included.
-- All eight figures were regenerated from the final data. The earlier duplicate
-  Figure 5 and inconsistent error descriptions are removed.
-
-## Important final audit corrections
-
-- The nonuniform-graininess second-order manufactured equation uses
-  `((mu + mu^sigma)/mu) y y^sigma y^{sigma^2}` rather than the constant-graininess
-  coefficient 2.
-- The initialization range `10^U[-3/2,1]` is correctly described as 2.5 decades.
-- The clustering refinement reduces the minimum graininess by about a factor of
-  274, so the manuscript describes it as spanning more than two decades.
-- The classical right-scattered ablation reports both a strict same-box control
-  and a generous-box sensitivity control.
-- The theoretical verifier uses an independent complex-step product
-  implementation for the analytic width derivative.
-- The hybrid experiment now records 33 sampled nodes and 32 residual equations,
-  with 30 right-dense residual nodes, 2 right-scattered jump residuals and the
-  terminal sample stored separately.
-- Training-mode wall times were reconciled with the final CSV: 0.247, 0.096,
-  0.125 and 0.135 s for finite differences, analytic Jacobian, variable
-  projection and projection-then-polish, respectively.
-- Bibliography hygiene was completed: Golub-Pereyra / O'Leary, Branch-Coleman-Li
-  and SciPy are cited where used, and the unused Yaslan reference was removed.
 
 ## LaTeX and PDF checks
 
