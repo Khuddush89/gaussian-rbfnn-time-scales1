@@ -18,3 +18,11 @@ RBF.tex
 *.synctex.gz
 *.fls
 *.fdb_latexmk
+
+# Exclude manuscript and compiled documents
+*.tex
+*.pdf
+Definitions/
+compile_logs/
+__pycache__/
+*.pyc

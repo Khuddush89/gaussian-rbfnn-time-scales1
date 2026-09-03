@@ -1,0 +1,6 @@
+example,applicable,max_error,rmse,rhs_evaluations,median_wall_s
+quantum,yes,0.0,0.0,10.0,4.654000000000001e-06
+accumulation,yes,3.3306690738754696e-16,1.586363281428938e-16,23.0,7.696250000000001e-05
+logistic,yes,0.0,0.0,11.0,5.218000000000001e-06
+hybrid time scale,no,,,,
+two-point BVP,no,,,,

@@ -1,0 +1,27 @@
+{
+  "hybrid": {
+    "max_error": 1.4040757688182914e-06,
+    "rmse": 5.980752104971427e-07,
+    "nfev": 1167,
+    "alpha_max_right_end": 0.25,
+    "sample_nodes": 33,
+    "residual_equations": 32,
+    "dense_residual_nodes": 30,
+    "scattered_residual_nodes": 2,
+    "terminal_sample": 5.0
+  },
+  "bvp_linear_reference_residual": 5.3734794391857577e-14,
+  "bvp_linear": {
+    "max_error": 5.551115123125783e-16,
+    "rmse": 2.582483352233621e-16,
+    "res_inf": 1.5232259897857148e-13,
+    "nfev": 35
+  },
+  "bvp_nonlinear_reference_residual": 7.771561172376096e-14,
+  "bvp_nonlinear": {
+    "max_error": 1.1102230246251565e-16,
+    "rmse": 7.850462293418876e-17,
+    "res_inf": 4.218847493575595e-14,
+    "nfev": 683
+  }
+}

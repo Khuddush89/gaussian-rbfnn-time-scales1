@@ -1,0 +1,101 @@
+==============================================================================
+(P1)  phi^Delta(t) = -alpha (t-c) phi^sigma(t)   and   phi(c)=1
+==============================================================================
+     PASS  quantum 2^N0       c-index  0  scaled.err=1.39e-17, abs.err=1.39e-17
+     PASS  quantum 2^N0       c-index  2  scaled.err=2.78e-17, abs.err=2.78e-17
+     PASS  quantum 2^N0       c-index  5  scaled.err=3.47e-17, abs.err=3.47e-17
+     PASS  uniform h=0.1      c-index  0  scaled.err=1.68e-15, abs.err=1.68e-15
+     PASS  uniform h=0.1      c-index  2  scaled.err=5.22e-16, abs.err=1.33e-15
+     PASS  uniform h=0.1      c-index  5  scaled.err=8.87e-16, abs.err=1.44e-15
+     PASS  harmonic accum     c-index  0  scaled.err=1.09e-13, abs.err=1.09e-13
+     PASS  harmonic accum     c-index  2  scaled.err=3.59e-15, abs.err=6.93e-14
+     PASS  harmonic accum     c-index 12  scaled.err=1.01e-14, abs.err=1.16e-13
+     PASS  random irregular   c-index  0  scaled.err=2.12e-15, abs.err=2.12e-15
+     PASS  random irregular   c-index  2  scaled.err=5.55e-16, abs.err=5.55e-16
+     PASS  random irregular   c-index  7  scaled.err=1.17e-15, abs.err=1.17e-15
+
+==============================================================================
+(P4)  envelope   exp(-a h2/(1-g)) <= phi <= exp(-a h2/(1+g)),  g<1
+==============================================================================
+        (silent = all envelope checks passed)
+     PASS  envelope sweep  
+
+==============================================================================
+(P5)  |h2(t,c) - (t-c)^2/2| <= mu* |t-c|
+==============================================================================
+     PASS  quantum 2^N0       r= 0  max dev 1.748e+05 <= 5.238e+05
+     PASS  quantum 2^N0       r= 5  max dev 1.746e+05 <= 5.079e+05
+     PASS  quantum 2^N0       r=10  max dev 1.748e+05 <= 5.238e+05
+     PASS  uniform h=0.1      r= 0  max dev 5.000e-02 <= 1.000e-01
+     PASS  uniform h=0.1      r= 5  max dev 2.500e-02 <= 5.000e-02
+     PASS  uniform h=0.1      r=10  max dev 5.000e-02 <= 1.000e-01
+     PASS  harmonic accum     r= 0  max dev 8.739e-04 <= 4.167e-03
+     PASS  harmonic accum     r=12  max dev 5.702e-04 <= 2.500e-03
+     PASS  harmonic accum     r=23  max dev 8.739e-04 <= 4.167e-03
+     PASS  random irregular   r= 0  max dev 4.268e-01 <= 1.156e+00
+     PASS  random irregular   r= 7  max dev 2.390e-01 <= 5.991e-01
+     PASS  random irregular   r=14  max dev 4.268e-01 <= 1.156e+00
+
+==============================================================================
+(P6)  uniform convergence to the classical Gaussian as mu* -> 0, rate O(mu*)
+==============================================================================
+     PASS  N=  10 mu*=0.1000  err=4.656e-02 bound=3.111e-01
+     PASS  N=  20 mu*=0.0500  err=2.297e-02 bound=1.526e-01 ratio= 2.03
+     PASS  N=  40 mu*=0.0250  err=1.142e-02 bound=7.564e-02 ratio= 2.01
+     PASS  N=  80 mu*=0.0125  err=5.694e-03 bound=3.766e-02 ratio= 2.01
+     PASS  N= 160 mu*=0.0063  err=2.843e-03 bound=1.879e-02 ratio= 2.00
+     PASS  N= 320 mu*=0.0031  err=1.421e-03 bound=9.385e-03 ratio= 2.00
+     PASS  N= 640 mu*=0.0016  err=7.101e-04 bound=4.690e-03 ratio= 2.00
+
+==============================================================================
+(P7)  unimodality:  nondecreasing left of c, nonincreasing right of c
+==============================================================================
+     PASS  quantum 2^N0        0 violations
+     PASS  uniform h=0.1       0 violations
+     PASS  harmonic accum      0 violations
+     PASS  random irregular    0 violations
+
+==============================================================================
+(P8)  analytic Jacobian dPhi/dalpha = Phi*S vs independent complex-step product
+==============================================================================
+     PASS  quantum 2^N0        scaled.err=1.93e-16
+     PASS  uniform h=0.1       scaled.err=7.63e-17
+     PASS  harmonic accum      scaled.err=1.73e-18
+     PASS  random irregular    scaled.err=6.35e-16
+
+==============================================================================
+(P9)  alpha_max on 2^N0 equals 4/c^2  (Proposition claim)
+==============================================================================
+     PASS  quantum closed form  [1.       0.25     0.0625   0.015625] vs [1.       0.25     0.0625   0.015625]
+
+==============================================================================
+(P10) integer-grid worked example, c=2, alpha=0.1
+==============================================================================
+     PASS  values  1.0000000 1.0000000 0.9090909 0.7575758 0.5827506
+
+==============================================================================
+(P11) hybrid time scale: e_lambda and the basis identity phi^Delta=-a(t-c)phi^sigma
+==============================================================================
+     PASS  e_lambda at scattered pts  
+     PASS  hybrid scattered identity  1.11e-16
+     PASS  hybrid dense identity (fd)  2.18e-04
+
+==============================================================================
+(P12) manufactured 2nd-order equation with nonuniform-graininess coefficient
+==============================================================================
+     PASS  quantum 2^N0        max|res|=0.00e+00
+     PASS  uniform h=0.1       max|res|=2.09e-14
+     PASS  harmonic accum      max|res|=1.36e-10
+     PASS  random irregular    max|res|=2.19e-14
+
+==============================================================================
+(P13) first-order manufactured: y^Delta = -y y^sigma solved by y=1/(1+t)
+==============================================================================
+     PASS  quantum 2^N0        max|res|=0.00e+00
+     PASS  uniform h=0.1       max|res|=1.05e-15
+     PASS  harmonic accum      max|res|=1.02e-13
+     PASS  random irregular    max|res|=8.88e-16
+
+==============================================================================
+ALL THEORETICAL VERIFICATION CHECKS PASSED
+==============================================================================

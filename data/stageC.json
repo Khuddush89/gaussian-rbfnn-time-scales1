@@ -1,0 +1,24 @@
+{
+  "logistic": {
+    "max_error_normalised": 6.938893903907228e-16,
+    "max_error_population": 6.938893903907228e-13,
+    "rmse_population": 4.17334715351382e-13,
+    "cert_population": 3.274472531202596e-12,
+    "nfev": 173
+  },
+  "inverse": {
+    "weight_rule": "residual scaled by observation horizon T=56 days",
+    "r_true": 0.03,
+    "noise_individuals": 2.0,
+    "rbfnn_r_median": 0.029805914802794004,
+    "rbfnn_r_iqr": 2.716101462768572e-07,
+    "rbfnn_r_range": 5.071570390209612e-07,
+    "rbfnn_rel_error": 0.006469506573533157,
+    "recurrence_r_single": 0.029823411480841014,
+    "recurrence_rel_error_single": 0.005886283971966166,
+    "median_rel_err_recurrence": 0.003332360207132165,
+    "median_rel_err_rbfnn": 0.0034217125843314516,
+    "rbfnn_better_fraction": 0.5333333333333333,
+    "median_abs_gap": 0.00015621045033771194
+  }
+}

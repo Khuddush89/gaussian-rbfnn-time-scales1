@@ -1,0 +1,25 @@
+PASS LM median error matches optimizer_summary.csv
+PASS LM best error matches optimizer_summary.csv
+PASS LM success/admissibility rates match final CSV
+PASS manuscript LM row uses final rounded CSV values
+PASS optimizer success rule is explicit in manuscript
+PASS fd median wall time rounds to 0.247 s
+PASS analytic median wall time rounds to 0.096 s
+PASS varpro median wall time rounds to 0.125 s
+PASS hybrid median wall time rounds to 0.135 s
+PASS manuscript contains final training-mode time 0.247 s
+PASS manuscript contains final training-mode time 0.096 s
+PASS manuscript contains final training-mode time 0.125 s
+PASS manuscript contains final training-mode time 0.135 s
+PASS hybrid JSON distinguishes 33 sample nodes from 32 residual equations
+PASS hybrid JSON records 30 dense and 2 scattered residual nodes
+PASS hybrid sample/residual count is explicit in manuscript
+PASS logistic pointwise certificate discrepancy is roundoff-scale
+PASS logistic sup-norm certificate remains above sup-norm error
+PASS baseline wording says two cases, not three columns
+PASS unused Yaslan bibliography entry removed
+PASS GolubPereyra1973 is present in source and citation audit is handled
+PASS ORLeary2013 is present in source and citation audit is handled
+PASS Branch1999 is present in source and citation audit is handled
+PASS Virtanen2020 is present in source and citation audit is handled
+ALL FINAL CONSISTENCY CHECKS PASSED

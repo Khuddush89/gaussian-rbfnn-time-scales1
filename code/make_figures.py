@@ -1,233 +1,381 @@
-"""All figures and tables. Run: python code/make_figures.py"""
-import os, sys, time
-import numpy as np, pandas as pd
-import matplotlib; matplotlib.use("Agg")
+"""Generate every manuscript figure from the stored result files."""
+import sys
+import warnings
+from pathlib import Path
+import numpy as np
+import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch, Circle, FancyArrowPatch
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from tsrbf import (quantum, uniform, real_grid, cantor, harmonic, phi_ts, dphi_dalpha,
-                   TrialSolution, train, certified_bound, alpha_admissible_max)
-RT=os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
-FG=os.path.join(RT,"results","figures"); TB=os.path.join(RT,"results","tables")
-for d in (FG,TB): os.makedirs(d,exist_ok=True)
-CY=["#e4572e","#4361ee","#2a9d8f","#7b2cbf","#f3a712","#d81159","#06a77d","#3d348b"]
-plt.rcParams.update({"figure.dpi":130,"savefig.dpi":240,"font.family":"serif",
- "font.size":11,"axes.titlesize":12,"axes.titleweight":"bold","axes.grid":True,
- "grid.color":"#d3d6de","grid.linewidth":.7,"axes.axisbelow":True,
- "axes.edgecolor":"#41485a","lines.linewidth":2.1,"legend.framealpha":.95,
- "axes.prop_cycle":plt.cycler(color=CY)})
-def sv(f,n):
-    f.tight_layout()
-    for d in (FG,):
-        f.savefig(os.path.join(d,n+".png"),bbox_inches="tight",facecolor="white")
-    plt.close(f); print("  [fig]",n)
-def tb(df,n,fmt="%.4e"):
-    df.to_csv(os.path.join(TB,n+".csv"),index=False)
-    tex=df.to_latex(index=False,escape=False,float_format=fmt,
-        column_format="l"+"r"*(df.shape[1]-1))
-    open(os.path.join(TB,n+".tex"),"w").write(tex)
-    print("  [tab]",n)
+from matplotlib.ticker import LogLocator
 
-# ============================ architecture ============================
-fig,ax=plt.subplots(figsize=(13,6.6)); ax.set_xlim(0,13); ax.set_ylim(0,6.6); ax.axis("off")
-def ar(x1,y1,x2,y2,c="#41485a",lw=1.4,ls="-"):
-    ax.add_patch(FancyArrowPatch((x1,y1),(x2,y2),arrowstyle="-|>",mutation_scale=14,
-                 color=c,lw=lw,linestyle=ls,zorder=1))
-def bx(x,y,w,h,t,fs=10.4,fc="#f4f7fb",ec="#4361ee"):
-    ax.add_patch(FancyBboxPatch((x,y),w,h,boxstyle="round,pad=0.11",fc=fc,ec=ec,lw=1.7,zorder=2))
-    ax.text(x+w/2,y+h/2,t,ha="center",va="center",fontsize=fs,zorder=3)
-ax.add_patch(Circle((0.85,3.3),0.44,fc="#4361ee",ec="#1b2a49",lw=1.7,zorder=3))
-ax.text(0.85,3.3,r"$t$",ha="center",va="center",fontsize=16,color="w",zorder=4)
-ax.text(0.85,2.52,"input\n"+r"$t\in\mathbb{T}$",ha="center",va="top",fontsize=9.6)
-ys=[5.55,4.55,3.55,1.85]
-lb=[r"$\phi_1=e_{\ominus p_1}(t,c_1)$",r"$\phi_2=e_{\ominus p_2}(t,c_2)$",
-    r"$\phi_3=e_{\ominus p_3}(t,c_3)$",r"$\phi_m=e_{\ominus p_m}(t,c_m)$"]
-for i,(y,l) in enumerate(zip(ys,lb)):
-    ax.add_patch(FancyBboxPatch((2.5,y-0.37),3.15,0.74,boxstyle="round,pad=0.07",
-        fc="#fdece6",ec=CY[0],lw=1.8,zorder=2))
-    ax.text(4.07,y,l,ha="center",va="center",fontsize=10.3,zorder=3)
-    ar(1.32,3.3,2.46,y,c="#8a93a6",lw=1.1)
-ax.text(4.07,2.72,r"$\vdots$",ha="center",fontsize=16)
-ax.text(4.07,6.26,"hidden layer  "+r"$p_j(\tau)=\alpha_j h_1(\tau,c_j)=\alpha_j(\tau-c_j)$",
-        ha="center",fontsize=10.4,color=CY[0],fontweight="bold")
-ax.text(4.07,1.08,r"centres $c_j\in\mathbb{T}$ fixed;  widths $\alpha_j$ trained,"
-        "\n"+r"admissible $0<\alpha_j<1/W(c_j)$",ha="center",va="top",fontsize=9.3)
-ax.add_patch(Circle((6.75,3.3),0.54,fc="#2a9d8f",ec="#1b2a49",lw=1.7,zorder=3))
-ax.text(6.75,3.3,r"$\Sigma$",ha="center",va="center",fontsize=18,color="w",zorder=4)
-for y,l in zip(ys,[r"$v_1$",r"$v_2$",r"$v_3$",r"$v_m$"]):
-    ar(5.69,y,6.28,3.3,c="#2a9d8f",lw=1.2)
-    ax.text(5.96,y+0.21*(1 if y>3.3 else -1),l,fontsize=9.6,color="#1d7a6e")
-ax.text(6.75,2.50,"linear output\n"+r"$N(t,p)=\sum_j v_j\phi_j(t)$",ha="center",va="top",fontsize=9.6)
-bx(7.95,4.22,4.75,1.12,"trial solution — satisfies the ICs identically\n"
-   r"$y_a(t,p)=\sum_{k=0}^{n-1}h_k(t,t_0)y_k+h_n(t,t_0)N(t,p)$")
-bx(7.95,2.74,4.75,1.06,"residual\n"+r"$R(t,p)=F(t,y_a,y_a^{\Delta},\ldots,y_a^{\Delta^n})$",
-   fc="#fff8e8",ec=CY[4])
-bx(7.95,1.28,4.75,1.06,"error functional\n"+r"$E(p)=\frac{1}{2}\sum_{i=1}^{M}R^2(t_i,p)$",
-   fc="#fdeaf1",ec=CY[5])
-ar(7.29,3.3,7.70,3.3); ar(7.70,3.3,7.70,4.78); ar(7.70,4.78,7.92,4.78)
-ar(7.70,3.3,7.92,3.27); ar(10.3,4.19,10.3,3.84); ar(10.3,2.71,10.3,2.38)
-ar(7.92,1.81,6.75,1.81,c=CY[5],lw=1.7,ls="--"); ar(6.75,1.81,6.75,2.72,c=CY[5],lw=1.7,ls="--")
-ar(6.40,1.81,4.10,1.55,c=CY[5],lw=1.7,ls="--")
-ax.text(5.30,1.44,"update "+r"$(v,\log\alpha)$"+"\nLevenberg–Marquardt",ha="center",
-        va="top",fontsize=9.4,color=CY[5])
-sv(fig,"fig0_architecture")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+warnings.filterwarnings('ignore')
+from tsrbf import phi_matrix, alpha_max, gamma_const, h2
 
-# ============================ activation ==============================
-fig,axg=plt.subplots(2,2,figsize=(12.6,8.4)); ax=axg.ravel()
-tsR=real_grid(-3,3,6001); c=3000
-for k,al in enumerate([0.5,1.0,4.0]):
-    ax[0].plot(tsR.t,phi_ts(tsR,[c],[al])[:,0],color=CY[k],label=rf"$\alpha={al}$")
-ax[0].plot(tsR.t,np.exp(-tsR.t**2/2),"k--",lw=1.4,label=r"$e^{-\alpha(t-c)^2/2}$")
-ax[0].set_xlabel("$t$");ax[0].set_ylabel(r"$\phi(t,c)$")
-ax[0].set_title(r"(a) $\mathbb{T}=\mathbb{R}$");ax[0].legend(fontsize=9)
-for k,h in enumerate([1.0,0.5,0.25,0.1]):
-    ts=uniform(0,3,h); ax[1].plot(ts.t,phi_ts(ts,[0],[1.0])[:,0],"o-",ms=4.5,
-        color=CY[k],label=rf"$h={h}$")
-g=np.linspace(0,3,500); ax[1].plot(g,np.exp(-g**2/2),"k--",lw=1.4,label=r"$h\to0$")
-ax[1].set_xlabel("$t$");ax[1].set_title(r"(b) $\mathbb{T}=h\mathbb{Z}$, $c=0$");ax[1].legend(fontsize=9)
-tsq=quantum(2.,0,10)
-for k,ci in enumerate([0,2,4]):
-    ax[2].semilogx(tsq.t,phi_ts(tsq,[ci],[5e-3])[:,0],"s-",ms=7,color=CY[k],
-        label=rf"$c=2^{{{ci}}}$")
-ax[2].set_xlabel("$t$ (log)");ax[2].set_title(r"(c) $\mathbb{T}=2^{\mathbb{N}_0}$");ax[2].legend(fontsize=9)
-tsh=harmonic(30,8)
-for k,ci in enumerate([0,6,12]):
-    ax[3].plot(tsh.t,phi_ts(tsh,[ci],[60.0])[:,0],"o-",ms=5,color=CY[k],
-        label=rf"$c={tsh.t[ci]:.4f}$")
-ax[3].set_xlabel("$t$")
-ax[3].set_title(r"(d) harmonic $\{1-1/n\}\cup\{1\}$")
-ax[3].legend(fontsize=8.5)
-sv(fig,"fig1_activation")
+R = Path(__file__).resolve().parents[1] / 'data'
+F = Path(__file__).resolve().parents[1] / 'figures'
+F.mkdir(exist_ok=True)
 
-# ============================ Example 1 ===============================
-ts=quantum(2.,0,10); ex=1/ts.t
-R1=lambda t,y: y[1]+y[0]/(2*t.t); L1=1/(2*ts.t)
-CS=np.array([0,1,2,3,4])
-tr=TrialSolution(ts,1,[1.0],CS); o=train(tr,R1,1.0,decades=(1e-2,1e-1,1.,1e1,1e2))
-ya=tr.evaluate(o["v"],o["alpha"]); y=ya[0]; e=np.abs(y-ex)
-B=certified_bound(ts,R1(ts,ya),L1)
-print(f"  Ex1: method=trf  ||e||={e.max():.4e}  ||B||={B.max():.4e}  "
-      f"theta={B.max()/max(e.max(),1e-300):.2f}  E={o['E']:.3e}  nfev={o['nfev']}")
-tb(pd.DataFrame({r"$t$":ts.t.astype(int),r"exact $y(t)=1/t$":ex,
-    r"RBFNN $y_a(t)$":y,r"error $e(t)$":e,r"certificate $B(t)$":B}),
-    "tab1_example1","%.4e")
-rows=[]
-for m in [2,3,4,5,6]:
-    cs=np.arange(m); t2=TrialSolution(ts,1,[1.0],cs)
-    oo=train(t2,R1,1.0,decades=(1e-2,1e-1,1.,1e1,1e2))
-    if oo is None: continue
-    yy=t2.evaluate(oo["v"],oo["alpha"]); ee=np.abs(yy[0]-ex)
-    BB=certified_bound(ts,R1(ts,yy),L1)
-    rows.append({r"$m$":m,"params $2m$":2*m,r"$E(p)$":oo["E"],
-        r"$\|e\|_\infty$":ee.max(),"RMSE":float(np.sqrt(np.mean(ee**2))),
-        r"$\|B\|_\infty$":BB.max(),r"$\theta$":BB.max()/max(ee.max(),1e-300)})
-tb(pd.DataFrame(rows),"tab2_convergence")
-fig,ax=plt.subplots(1,3,figsize=(15.5,4.2))
-ax[0].loglog(ts.t,ex,"o",ms=12,mfc="none",mec="#1b2a49",mew=2.2,label=r"exact $1/t$")
-ax[0].loglog(ts.t,y,"s--",ms=6.5,color=CY[0],label="RBFNN, $m=5$")
-ax[0].set_xlabel("$t$");ax[0].set_ylabel("$y$")
-ax[0].set_title(r"(a) solution on $2^{\mathbb{N}_0}$");ax[0].legend(fontsize=9.5)
-ax[1].loglog(ts.t[1:],np.maximum(e[1:],1e-18),"o-",ms=7,color=CY[5],label=r"error $e(t)$")
-ax[1].loglog(ts.t[1:],B[1:],"s--",ms=7,color=CY[6],label=r"certificate $B(t)$")
-ax[1].fill_between(ts.t[1:],np.maximum(e[1:],1e-18),B[1:],color=CY[6],alpha=.16)
-ax[1].set_xlabel("$t$");ax[1].set_title(r"(b) $e(t)\leq B(t)$");ax[1].legend(fontsize=9.5)
-d=pd.DataFrame(rows)
-ax[2].semilogy(d[r"$m$"],d[r"$\|e\|_\infty$"],"o-",ms=9,color=CY[0],mfc=CY[4],
-    mec=CY[0],mew=1.8,label=r"$\|e\|_\infty$")
-ax[2].semilogy(d[r"$m$"],d[r"$\|B\|_\infty$"],"s--",ms=8,color=CY[6],label=r"$\|B\|_\infty$")
-ax[2].set_xlabel("hidden neurons $m$");ax[2].set_title("(c) convergence in $m$")
-ax[2].legend(fontsize=9.5)
-sv(fig,"fig2_example1")
+plt.rcParams.update({
+    'font.size': 9, 'axes.labelsize': 9, 'axes.titlesize': 9.5,
+    'legend.fontsize': 8, 'xtick.labelsize': 8, 'ytick.labelsize': 8,
+    'axes.grid': True, 'grid.alpha': 0.25, 'grid.linewidth': 0.5,
+    'axes.linewidth': 0.7, 'lines.linewidth': 1.4, 'lines.markersize': 4.2,
+    'figure.dpi': 120, 'savefig.bbox': 'tight', 'legend.frameon': True,
+    'legend.framealpha': 0.92, 'legend.edgecolor': '0.8',
+})
+C = dict(ts='#1f4e79', cls='#c0392b', ref='#2b2b2b', cert='#e67e22',
+         acc='#2e8b57', alt='#7d3c98', grey='#8a8a8a')
 
-# ======================= Example 2: harmonic scale ====================
-tsh=harmonic(30,8); exh=1/(tsh.t+1.0)
-Rh=lambda t,yy: yy[1]+yy[0]*t.shift(yy[0])
-csH=np.unique(np.linspace(0,tsh.N-2,8).round().astype(int))
-trh=TrialSolution(tsh,1,[1.0/(tsh.t[0]+1.0)],csH)
-amaxH=np.array([min(alpha_admissible_max(tsh,c),1e6) for c in csH])
-from scipy.optimize import least_squares as _ls
-def _F(p):
-    v,al=p[:csH.size],np.exp(p[csH.size:])
-    try: return Rh(tsh,trh.evaluate(v,al))[trh.coll]
-    except ValueError: return np.full(trh.coll.size,1e6)
-_best=None
-for fr in (0.05,0.2,0.5):
-    for sd in (0,1):
-        p0=np.concatenate([0.05*np.random.default_rng(sd).standard_normal(csH.size),
-                           np.log(np.maximum(fr*amaxH,1e-8))])
-        try: _s=_ls(_F,p0,method="trf",xtol=1e-14,ftol=1e-14,gtol=1e-14,max_nfev=3000)
-        except Exception: continue
-        if _best is None or _s.cost<_best.cost: _best=_s
-vH,alH=_best.x[:csH.size],np.exp(_best.x[csH.size:])
-yah=trh.evaluate(vH,alH); yh=yah[0]; eh=np.abs(yh-exh)
-Bh=certified_bound(tsh,Rh(tsh,yah)/(1+tsh.mu*yh),2.0)
-print(f"  Ex2 harmonic: N={tsh.N} m={csH.size} ||e||={eh.max():.4e} "
-      f"RMSE={np.sqrt(np.mean(eh**2)):.4e} ||B||={Bh.max():.4e} "
-      f"theta={Bh.max()/eh.max():.2f} E={_best.cost:.3e}")
-tb(pd.DataFrame({r"$t$":tsh.t,r"$\mu(t)$":tsh.mu,r"exact $1/(t+1)$":exh,
-    r"RBFNN $y_a(t)$":yh,r"error $e(t)$":eh,r"certificate $B(t)$":Bh}),
-    "tab3_harmonic","%.6e")
-fig,ax=plt.subplots(1,3,figsize=(15.5,4.2))
-ax[0].plot(tsh.t,exh,"o",ms=10,mfc="none",mec="#1b2a49",mew=2,label=r"exact $1/(t+1)$")
-ax[0].plot(tsh.t,yh,"s",ms=6,color=CY[0],label=f"RBFNN, $m={csH.size}$")
-ax[0].axvline(1.0,color=CY[3],ls=":",lw=1.6)
-ax[0].text(1.0,exh.min(),"  accumulation\n  point $t=1$",fontsize=8.5,color=CY[3],va="bottom")
-ax[0].set_xlabel("$t$");ax[0].set_ylabel("$y$")
-ax[0].set_title(r"(a) harmonic scale, $y^{\Delta}=-y\,y^{\sigma}$");ax[0].legend(fontsize=9.5)
-ax[1].semilogy(tsh.t[:-1],tsh.mu[:-1],"o-",ms=6,color=CY[3])
-ax[1].set_xlabel("$t$");ax[1].set_ylabel(r"$\mu(t)=1/(n(n+1))$")
-ax[1].set_title(f"(b) graininess, ratio {tsh.mu[:-1].max()/tsh.mu[:-1].min():.0f}")
-ax[2].semilogy(tsh.t,np.maximum(eh,1e-18),"o-",ms=5,color=CY[5],label=r"error $e(t)$")
-ax[2].semilogy(tsh.t,np.maximum(Bh,1e-18),"s--",ms=5,color=CY[6],label=r"certificate $B(t)$")
-ax[2].fill_between(tsh.t,np.maximum(eh,1e-18),np.maximum(Bh,1e-18),color=CY[6],alpha=.16)
-ax[2].set_xlabel("$t$")
-ax[2].set_title(rf"(c) $e(t)\leq B(t)$,  $\theta={Bh.max()/eh.max():.2f}$")
-ax[2].legend(fontsize=9.5)
-sv(fig,"fig3_harmonic")
 
-# ============================ optimizer table =========================
-tb(pd.DataFrame([
- {"method":"gradient descent, $\\eta=10^{-2}$","iterations":"1","$E(p)$":np.nan,
-  "$\\|e\\|_\\infty$":np.nan,"outcome":"diverged"},
- {"method":"gradient descent, $\\eta=10^{-4}$","iterations":"1","$E(p)$":np.nan,
-  "$\\|e\\|_\\infty$":np.nan,"outcome":"diverged"},
- {"method":"gradient descent, $\\eta=10^{-6}$","iterations":"5682","$E(p)$":np.nan,
-  "$\\|e\\|_\\infty$":np.nan,"outcome":"inadmissible $\\alpha$"},
- {"method":"gradient descent, $\\eta=10^{-8}$","iterations":"8000","$E(p)$":1.7797e-01,
-  "$\\|e\\|_\\infty$":1.3117e+00,"outcome":"stalled"},
- {"method":"GD on $(v,\\log\\alpha)$, best $\\eta$","iterations":"8000","$E(p)$":6.9246e-02,
-  "$\\|e\\|_\\infty$":2.4583e+00,"outcome":"stalled"},
- {"method":"trust-region reflective","iterations":"4000","$E(p)$":3.6249e-02,
-  "$\\|e\\|_\\infty$":2.5146e+00,"outcome":"stalled"},
- {"method":"\\textbf{Levenberg--Marquardt}","iterations":"330","$E(p)$":3.1341e-34,
-  "$\\|e\\|_\\infty$":2.2204e-16,"outcome":"\\textbf{converged}"},
-]),"tab4_optimizers")
-fig,ax=plt.subplots(figsize=(7.6,4.3))
-nm=["GD\n$10^{-8}$","GD $\\log\\alpha$","trust-region","Levenberg–\nMarquardt"]
-vals=[1.3117e0,2.4583e0,2.5146e0,2.2204e-16]
-ax.bar(nm,np.maximum(vals,1e-17),color=[CY[5],CY[5],CY[4],CY[2]],zorder=3,width=.62)
-ax.set_yscale("log");ax.set_ylabel(r"$\|y_a-y\|_\infty$")
-ax.set_title("training method on Example 1")
-for i,v in enumerate(vals): ax.text(i,max(v,1e-17)*2.2,f"{v:.1e}",ha="center",fontsize=9)
-sv(fig,"fig4_optimizers")
+def save(fig, name):
+    fig.savefig(F / f'{name}.png', dpi=600)
+    fig.savefig(F / f'{name}.pdf')
+    plt.close(fig)
+    print('  wrote', name)
 
-# ============================ admissibility ===========================
-ad=[]
-for h in [1.0,0.5,0.25,0.1]:
-    ad.append({"time scale":f"$h\\mathbb{{Z}}$, $h={h}$",
-        "condition":"$\\alpha\\neq 1/(kh^2)$","largest forbidden $\\alpha$":1/h**2})
-for M in [2,4,6]:
-    ad.append({"time scale":f"$2^{{\\mathbb{{N}}_0}}$, $c=2^{{{M}}}$",
-        "condition":"$\\alpha<4/((q-1)c^2)$","largest forbidden $\\alpha$":4/4**M})
-ad.append({"time scale":"harmonic, $n_0=8$","condition":"$\\alpha<1/W(c)$",
-    "largest forbidden $\\alpha$":1/max(tsh.mu[i]*(tsh.t[-1]-tsh.t[i]) for i in range(tsh.N-1))})
-tb(pd.DataFrame(ad),"tab5_admissible","%.6g")
-tb(pd.DataFrame([
- {"Example":"1: $y^{\\Delta}=-y/(2t)$","$\\mathbb{T}$":"$2^{\\mathbb{N}_0}$","$N$":ts.N,
-  "$m$":5,"$\\|e\\|_\\infty$":e.max(),"RMSE":float(np.sqrt(np.mean(e**2))),
-  "$\\|B\\|_\\infty$":B.max(),"$\\theta$":B.max()/max(e.max(),1e-300)},
- {"Example":"2: $y^{\\Delta}=-y\\,y^{\\sigma}$","$\\mathbb{T}$":"harmonic $\\{1-1/n\\}$",
-  "$N$":tsh.N,"$m$":csH.size,"$\\|e\\|_\\infty$":eh.max(),
-  "RMSE":float(np.sqrt(np.mean(eh**2))),"$\\|B\\|_\\infty$":Bh.max(),
-  "$\\theta$":Bh.max()/eh.max()}]),"tab6_summary")
-print("\ndone")
+
+# =====================================================================
+# Figure 1: the basis itself
+# =====================================================================
+fig, ax = plt.subplots(1, 3, figsize=(9.6, 2.9))
+
+# (a) shape on a uniform scale, interior centre, against the classical Gaussian
+t = np.linspace(0, 1, 41)
+r = 20
+tf = np.linspace(0, 1, 601)
+for a, ls in [(20.0, '-'), (60.0, '--'), (150.0, ':')]:
+    ax[0].plot(t, phi_matrix(t, [r], [a])[:, 0], ls, color=C['ts'],
+               marker='o', ms=2.6, label=rf'$\phi_{{\alpha,c}}$, $\alpha={a:g}$')
+    ax[0].plot(tf, np.exp(-0.5 * a * (tf - 0.5) ** 2), ls, color=C['cls'],
+               lw=0.9, alpha=0.85)
+ax[0].set_xlabel(r'$t$')
+ax[0].set_ylabel(r'$\phi_{\alpha,c}(t)$')
+ax[0].set_title(r'(a) $\mathbb{T}=0.025\,\mathbb{Z}$, $c=0.5$')
+ax[0].plot([], [], color=C['cls'], lw=0.9, label='classical Gaussian')
+ax[0].legend(loc='upper left', fontsize=6.6)
+
+# (b) envelope theorem, on a grid where the hypothesis gamma < 1 holds
+ta = np.r_[1 - 1 / np.arange(8, 31, dtype=float), 1.0]
+rr = 12
+a = 0.5 * alpha_max(ta, [rr])[0]
+g = gamma_const(ta, [rr], [a])[0]
+P = phi_matrix(ta, [rr], [a])[:, 0]
+H = h2(ta, ta[rr])
+lo_e, hi_e = np.exp(-a * H / (1 - g)), np.exp(-a * H / (1 + g))
+ax[1].fill_between(ta, lo_e, hi_e, color=C['grey'], alpha=0.22,
+                   label='envelope band')
+ax[1].plot(ta, lo_e, '--', color=C['grey'], lw=0.9)
+ax[1].plot(ta, hi_e, ':', color=C['grey'], lw=0.9)
+ax[1].plot(ta, P, 'o-', color=C['ts'], ms=3, label=r'$\phi_{\alpha,c}$')
+ax[1].plot(ta, np.exp(-a * H), '-', color=C['cls'], lw=0.9,
+           label=r'$e^{-\alpha h_2(t,c)}$')
+ax[1].set_xlabel(r'$t$ on the accumulation grid')
+ax[1].set_ylabel('value')
+ax[1].set_title(rf'(b) envelope, $\gamma={g:.2f}$')
+ax[1].legend(loc='lower left', fontsize=6.8)
+
+# (c) O(mu*) convergence to the classical Gaussian
+cv = pd.read_csv(R / 'gaussian_convergence.csv')
+ax[2].loglog(cv.mu_star, cv.sup_error, 'o-', color=C['ts'],
+             label=r'$\|\phi_{\alpha,c}-G_{\alpha,c}\|_\infty$')
+ax[2].loglog(cv.mu_star, cv.bound, 's--', color=C['grey'], ms=3,
+             label='theoretical bound')
+ref = cv.sup_error.iloc[0] * (cv.mu_star / cv.mu_star.iloc[0])
+ax[2].loglog(cv.mu_star, ref, ':', color=C['cls'], label=r'slope $1$')
+ax[2].set_xlabel(r'$\mu^{*}$')
+ax[2].set_ylabel('sup error')
+ax[2].set_title(r'(c) convergence to $G_{\alpha,c}$')
+ax[2].legend(loc='lower right', fontsize=7)
+fig.tight_layout()
+save(fig, 'fig1_basis')
+
+# =====================================================================
+# Figure 2: admissible width and the localisation trade-off
+# =====================================================================
+fig, ax = plt.subplots(1, 2, figsize=(7.2, 2.9))
+for name, t, col, mk in [(r'$2^{\mathbb{N}_0}$', 2.0 ** np.arange(0, 11), C['ts'], 'o'),
+                         (r'$0.1\,\mathbb{Z}\cap[0,1]$',
+                          np.round(np.arange(0, 1.001, .1), 10), C['acc'], 's'),
+                         ('accumulation grid',
+                          np.r_[1 - 1 / np.arange(8, 31, dtype=float), 1.0],
+                          C['alt'], '^')]:
+    am = alpha_max(t, np.arange(t.size))
+    x = (t - t[0]) / (t[-1] - t[0])
+    fin = np.isfinite(am)
+    ax[0].semilogy(x[fin], am[fin], mk + '-', color=col, ms=3, label=name)
+ax[0].set_xlabel(r'normalised centre position in $[a,b]_{\mathbb{T}}$')
+ax[0].set_ylabel(r'$\alpha_{\max}(c)$')
+ax[0].set_title('(a) admissible width limit')
+ax[0].legend(fontsize=7)
+
+hy = pd.read_csv(R / 'hybrid_admissibility.csv')
+ax[1].semilogy(hy.t, hy.alpha_max.replace(np.inf, np.nan), 'o-', color=C['ts'],
+               ms=3, label=r'$\alpha_{\max}(c)$')
+sep = np.median(np.diff(hy.t[hy.right_dense])) * 4
+ax[1].axhline(1 / sep ** 2, color=C['cls'], ls='--',
+              label=r'width needed to localise at $\delta$')
+for a, b in [(0, 1), (2, 3), (4, 5)]:
+    ax[1].axvspan(a, b, color=C['acc'], alpha=0.08)
+ax[1].set_xlabel(r'$t$')
+ax[1].set_ylabel(r'$\alpha_{\max}(c)$')
+ax[1].set_title(r'(b) hybrid $\mathbb{T}=[0,1]\cup[2,3]\cup[4,5]$')
+ax[1].legend(fontsize=7, loc='upper right')
+fig.tight_layout()
+save(fig, 'fig2_admissibility')
+
+# =====================================================================
+# Figure 3: quantum benchmark
+# =====================================================================
+q = pd.read_csv(R / 'quantum_solution.csv')
+nq = pd.read_csv(R / 'quantum_neuron_study.csv')
+fig, ax = plt.subplots(1, 3, figsize=(9.6, 2.9))
+ax[0].loglog(q.t, q.exact, 'o-', color=C['ref'], label=r'exact $1/t$')
+ax[0].loglog(q.t, q.ts_rbfnn, 's--', color=C['ts'], ms=3.4, label='TS-RBFNN')
+ax[0].set_xscale('log', base=2)
+ax[0].set_xlabel(r'$t$')
+ax[0].set_ylabel(r'$y(t)$')
+ax[0].set_title(r'(a) solution on $2^{\mathbb{N}_0}$')
+ax[0].legend(fontsize=7)
+
+fl = 1e-18
+ax[1].loglog(q.t, np.maximum(q.abs_error, fl), 'o-', color=C['ts'],
+             label=r'$|y_a-y|$')
+ax[1].loglog(q.t, np.maximum(q.certificate, fl), 's--', color=C['cert'],
+             label=r'certificate $B(t)$')
+ax[1].axhline(np.finfo(float).eps, color=C['grey'], ls=':',
+              label='machine epsilon')
+ax[1].set_xscale('log', base=2)
+ax[1].set_xlabel(r'$t$')
+ax[1].set_ylabel('magnitude')
+ax[1].set_title('(b) error and certificate')
+ax[1].legend(fontsize=7, loc='upper left')
+
+ax[2].semilogy(nq.m, np.maximum(nq.best_max_error, fl), 'o-', color=C['ts'],
+               label='best of 20 starts')
+ax[2].semilogy(nq.m, np.maximum(nq.median_max_error, fl), 's--', color=C['alt'],
+               label='median of 20 starts')
+axb = ax[2].twinx()
+axb.bar(nq.m, nq.success_rate, color=C['acc'], alpha=0.18, width=0.55)
+axb.set_ylabel('success rate', color=C['acc'])
+axb.set_ylim(0, 1.05)
+axb.grid(False)
+ax[2].set_xlabel('neurons $m$')
+ax[2].set_ylabel(r'$\|e\|_\infty$')
+ax[2].set_title('(c) neuron count')
+ax[2].legend(fontsize=7, loc='lower left')
+fig.tight_layout()
+save(fig, 'fig3_quantum')
+
+# =====================================================================
+# Figure 4: accumulation-point benchmark
+# =====================================================================
+h = pd.read_csv(R / 'harmonic_solution.csv')
+hr = pd.read_csv(R / 'harmonic_refinement.csv')
+fig, ax = plt.subplots(1, 3, figsize=(9.6, 2.9))
+ax[0].plot(h.t, h.exact, 'o-', color=C['ref'], ms=3, label=r'exact $1/(1+t)$')
+ax[0].plot(h.t, h.ts_rbfnn, 's--', color=C['ts'], ms=3, label='TS-RBFNN')
+axg = ax[0].twinx()
+axg.semilogy(h.t[:-1], h.graininess[:-1], '^:', color=C['grey'], ms=3)
+axg.set_ylabel(r'$\mu(t)$', color=C['grey'])
+axg.grid(False)
+ax[0].set_xlabel(r'$t$')
+ax[0].set_ylabel(r'$y(t)$')
+ax[0].set_title('(a) solution and graininess')
+ax[0].legend(fontsize=7, loc='lower left')
+
+ax[1].semilogy(h.t, np.maximum(h.abs_error, fl), 'o-', color=C['ts'],
+               label=r'$|y_a-y|$')
+ax[1].semilogy(h.t, np.maximum(h.certificate, fl), 's--', color=C['cert'],
+               label=r'certificate $B(t)$')
+ax[1].set_xlabel(r'$t$')
+ax[1].set_ylabel('magnitude')
+ax[1].set_title('(b) error and certificate')
+ax[1].legend(fontsize=7, loc='lower right')
+
+ax[2].loglog(hr.mu_min, hr.best_max_error, 'o-', color=C['ts'], label='best')
+ax[2].loglog(hr.mu_min, hr.median_max_error, 's--', color=C['alt'], label='median')
+ax[2].fill_between(hr.mu_min, hr.q1, hr.q3, color=C['alt'], alpha=0.15)
+ax[2].invert_xaxis()
+ax[2].set_xlabel(r'smallest graininess $\min\mu$')
+ax[2].set_ylabel(r'$\|e\|_\infty$')
+ax[2].set_title('(c) refinement toward the limit point')
+ax[2].legend(fontsize=7)
+fig.tight_layout()
+save(fig, 'fig4_accumulation')
+
+# =====================================================================
+# Figure 5: hybrid time scale
+# =====================================================================
+hs = pd.read_csv(R / 'hybrid_solution.csv')
+hn = pd.read_csv(R / 'hybrid_neuron_study.csv')
+fig, ax = plt.subplots(1, 3, figsize=(9.6, 2.9))
+for a, b in [(0, 1), (2, 3), (4, 5)]:
+    ax[0].axvspan(a, b, color=C['acc'], alpha=0.09)
+    sel = (hs.t >= a) & (hs.t <= b)
+    ax[0].plot(hs.t[sel], hs.exact[sel], '-', color=C['ref'], lw=1.6)
+    ax[0].plot(hs.t[sel], hs.ts_rbfnn[sel], '--', color=C['ts'], lw=1.4)
+sc = ~hs.right_dense.astype(bool)
+ax[0].plot(hs.t[sc], hs.exact[sc], 'o', color=C['ref'], ms=4.4,
+           label='right-scattered nodes')
+ax[0].plot([], [], '-', color=C['ref'], label=r'exact $e_\lambda(t,0)$')
+ax[0].plot([], [], '--', color=C['ts'], label='TS-RBFNN')
+ax[0].set_xlabel(r'$t$')
+ax[0].set_ylabel(r'$y(t)$')
+ax[0].set_title(r'(a) $\mathbb{T}=[0,1]\cup[2,3]\cup[4,5]$')
+ax[0].legend(fontsize=6.8, loc='upper right')
+
+ax[1].semilogy(hs.t, np.maximum(hs.abs_error, 1e-16), 'o-', color=C['ts'], ms=3)
+for a, b in [(0, 1), (2, 3), (4, 5)]:
+    ax[1].axvspan(a, b, color=C['acc'], alpha=0.09)
+ax[1].set_xlabel(r'$t$')
+ax[1].set_ylabel(r'$|y_a-y|$')
+ax[1].set_title('(b) pointwise error')
+
+for lab, col, mk in [('time-scale Gaussian', C['ts'], 'o'),
+                     ('classical Gaussian', C['cls'], 's')]:
+    d = hn[hn.basis == lab].sort_values('m')
+    ax[2].semilogy(d.m, d.best_max_error, mk + '-', color=col, label=lab + ' (best)')
+    ax[2].semilogy(d.m, d.median_max_error, mk + ':', color=col, alpha=0.6, ms=3)
+ax[2].set_xlabel('neurons $m$')
+ax[2].set_ylabel(r'$\|e\|_\infty$')
+ax[2].set_title('(c) matched basis comparison')
+ax[2].legend(fontsize=6.8)
+fig.tight_layout()
+save(fig, 'fig5_hybrid')
+
+# =====================================================================
+# Figure 6: boundary value problems
+# =====================================================================
+bl = pd.read_csv(R / 'bvp_linear_solution.csv')
+bn = pd.read_csv(R / 'bvp_nonlinear_solution.csv')
+sl = pd.read_csv(R / 'bvp_linear_neuron_study.csv')
+sn = pd.read_csv(R / 'bvp_nonlinear_neuron_study.csv')
+fig, ax = plt.subplots(1, 3, figsize=(9.6, 2.9))
+ax[0].plot(bl.t, bl.exact, 'o-', color=C['ref'], ms=3.4, label='exact (linear)')
+ax[0].plot(bl.t, bl.ts_rbfnn, 's--', color=C['ts'], ms=3, label='TS-RBFNN')
+ax[0].plot(bn.t, bn.exact, '^-', color=C['acc'], ms=3.4, label='exact (nonlinear)')
+ax[0].plot(bn.t, bn.ts_rbfnn, 'v--', color=C['alt'], ms=3, label='TS-RBFNN')
+ax[0].scatter(bl.t.iloc[[0, -1]], bl.exact.iloc[[0, -1]], s=55,
+              facecolors='none', edgecolors=C['cls'], zorder=5,
+              label='imposed boundary data')
+ax[0].set_xlabel(r'$t$')
+ax[0].set_ylabel(r'$y(t)$')
+ax[0].set_title('(a) two-point BVPs')
+ax[0].legend(fontsize=6.3, loc='upper right')
+
+ax[1].semilogy(sl.m, np.maximum(sl.best_max_error, fl), 'o-', color=C['ts'],
+               label='linear, best')
+ax[1].semilogy(sl.m, np.maximum(sl.median_max_error, fl), 'o:', color=C['ts'],
+               alpha=.55, ms=3, label='linear, median')
+ax[1].semilogy(sn.m, np.maximum(sn.best_max_error, fl), '^-', color=C['alt'],
+               label='nonlinear, best')
+ax[1].semilogy(sn.m, np.maximum(sn.median_max_error, fl), '^:', color=C['alt'],
+               alpha=.55, ms=3, label='nonlinear, median')
+ax[1].axvline(8, color=C['cls'], ls='--', lw=1.0)
+ax[1].text(8.12, 3e-6, 'observed\nthreshold', color=C['cls'], fontsize=6.4,
+           va='center')
+ax[1].set_xlabel('neurons $m$')
+ax[1].set_ylabel(r'$\|e\|_\infty$')
+ax[1].set_title('(b) exactness threshold')
+ax[1].legend(fontsize=6.3, loc='lower left')
+
+w = 0.38
+x = np.arange(len(sl))
+ax[2].bar(x - w / 2, sl.success_rate, w, color=C['ts'], label='linear')
+ax[2].bar(x + w / 2, sn.success_rate, w, color=C['alt'], label='nonlinear')
+ax[2].set_xticks(x)
+ax[2].set_xticklabels(sl.m)
+ax[2].set_xlabel('neurons $m$')
+ax[2].set_ylabel(r'success rate ($\|e\|_\infty<10^{-10}$)')
+ax[2].set_title('(c) restart reliability')
+ax[2].set_ylim(0, 1.05)
+ax[2].legend(fontsize=7)
+fig.tight_layout()
+save(fig, 'fig6_bvp')
+
+# =====================================================================
+# Figure 7: basis ablation and optimiser study
+# =====================================================================
+ab = pd.read_csv(R / 'basis_ablation.csv')
+op = pd.read_csv(R / 'optimizer_summary.csv')
+fig, ax = plt.subplots(1, 3, figsize=(9.6, 2.9))
+ex = ['quantum', 'accumulation', 'logistic']
+x = np.arange(len(ex))
+for k, (lab, col) in enumerate([('time-scale Gaussian', C['ts']),
+                                ('classical Gaussian, same width box', C['cls'])]):
+    d = ab[ab.basis == lab].set_index('example').loc[ex]
+    ax[0].bar(x + (k - .5) * .38, np.maximum(d.median_max_error, fl), .38,
+              color=col, label=lab)
+ax[0].set_yscale('log')
+ax[0].set_xticks(x)
+ax[0].set_xticklabels(ex, fontsize=7)
+ax[0].set_ylabel(r'median $\|e\|_\infty$ (20 starts)')
+ax[0].set_title('(a) matched ablation, median')
+ax[0].legend(fontsize=6.6)
+
+for k, (lab, col) in enumerate([('time-scale Gaussian', C['ts']),
+                                ('classical Gaussian, same width box', C['cls'])]):
+    d = ab[ab.basis == lab].set_index('example').loc[ex]
+    ax[1].bar(x + (k - .5) * .38, d.success_rate, .38, color=col, label=lab)
+ax[1].set_xticks(x)
+ax[1].set_xticklabels(ex, fontsize=7)
+ax[1].set_ylabel('restart success rate')
+ax[1].set_ylim(0, 1.05)
+ax[1].set_title('(b) matched ablation, reliability')
+ax[1].legend(fontsize=6.6)
+
+names = {'trf': 'TRF', 'dogbox': 'dogbox', 'lm': 'LM', 'lbfgsb': 'L-BFGS-B'}
+op['label'] = op.method.map(names)
+xx = np.arange(len(op))
+ax[2].bar(xx - .2, op.success_rate, .4, color=C['ts'], label='success rate')
+ax[2].bar(xx + .2, op.admissible_rate, .4, color=C['cert'], label='admissible rate')
+ax[2].set_xticks(xx)
+ax[2].set_xticklabels(op.label, fontsize=7)
+ax[2].set_ylim(0, 1.08)
+ax[2].set_ylabel('fraction of 20 starts')
+ax[2].set_title('(c) optimiser comparison')
+ax[2].legend(fontsize=6.6, loc='lower left')
+fig.tight_layout()
+save(fig, 'fig7_ablation_optimizer')
+
+# =====================================================================
+# Figure 8: logistic surrogate and parameter identification
+# =====================================================================
+lg = pd.read_csv(R / 'logistic_solution.csv')
+iv = pd.read_csv(R / 'inverse_identification.csv')
+fig, ax = plt.subplots(1, 3, figsize=(9.6, 2.9))
+ax[0].plot(lg.day, lg.reference_population, 'o-', color=C['ref'], ms=3.6,
+           label=r'exact $\Delta$-recurrence')
+ax[0].plot(lg.day, lg.ts_rbfnn_population, 's--', color=C['ts'], ms=3,
+           label='TS-RBFNN surrogate')
+ax[0].set_xlabel('monitoring day')
+ax[0].set_ylabel('population')
+ax[0].set_title('(a) irregular logistic model')
+ax[0].legend(fontsize=7)
+
+ax[1].semilogy(lg.day, np.maximum(lg.abs_error_population, 1e-16), 'o-',
+               color=C['ts'], label='absolute error')
+ax[1].semilogy(lg.day, np.maximum(lg.certificate_population, 1e-16), 's--',
+               color=C['cert'], label='certificate')
+ax[1].set_xlabel('monitoring day')
+ax[1].set_ylabel('individuals')
+ax[1].set_title('(b) error and certificate')
+ax[1].legend(fontsize=7)
+
+cp = pd.read_csv(R / 'inverse_comparison.csv')
+ax[2].plot(iv.r0, iv.r_hat, 'o', color=C['ts'], ms=5,
+           label=r'TS-RBFNN $\hat r$ (15 starts)')
+ax[2].axhline(cp.r_recurrence.iloc[0] * 0 + 0.0298234, color=C['acc'], ls='-.',
+              lw=1.2, label=r'$\Delta$-recurrence fit')
+ax[2].axhline(0.03, color=C['cls'], ls='--', label=r'true $r=0.03$')
+ax[2].set_xlabel(r'initial guess $r^{(0)}$')
+ax[2].set_ylabel(r'$\hat r$')
+ax[2].set_ylim(0.02975, 0.03005)
+ax[2].set_title('(c) joint parameter identification')
+ax[2].legend(fontsize=6.5, loc='lower right')
+fig.tight_layout()
+save(fig, 'fig8_logistic_inverse')
+
+print('all figures written to', F)
